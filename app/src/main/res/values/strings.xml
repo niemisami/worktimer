@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">AndroidSandbox</string>
+    <string name="cancel">Cancel</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="new_text">New</string>
+    <string name="remove">Remove</string>
+    <string name="add">Add</string>
+    <string name="welcome">Welcome</string>
+    <string name="getting_started">Let\'s Get Started</string>
+
+
+
+
+    <string name="today_intro">Hello! Today is </string>
+    <string name="come_to_work">Start working</string>
+    <string name="break_text">Take a Break</string>
+    <string name="leave_work">Leave work</string>
+    <string name="weekend">Weekend</string>
+    <string name="day_stats">Today you have worked:</string>
+    <string name="week_stats">This week you have worked:</string>
+
+
+</resources>
