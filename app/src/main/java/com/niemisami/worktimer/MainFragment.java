@@ -1,10 +1,12 @@
 package com.niemisami.worktimer;
 
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -14,15 +16,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.niemisami.worktimer.R;
-
-import org.w3c.dom.Text;
-
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Formatter;
 
 
 /**
@@ -39,24 +35,20 @@ public class MainFragment extends Fragment {
     final private static String STATE_BREAK_TIME = "STATE_BREAK_TIME";
     final private static String STATE_END_TIME = "STATE_END_TIME";
 
-
-
-
-
     private Toolbar mToolBar;
 
-    private Button mStartStopWorkButton, mBreakButton;
+    private Button mStartStopWorkButton, mBreakStartStopButton;
     private TextView mDateView, mHoursView, mWeekOrDayView;
-    
+
     private long mStartTime, mEndTime, mBreakStart, mWholeBreakTime;
-    private boolean mWorking, mOnBreak;
-    
+    private boolean mIsWorking, mIsOnBreak;
+
 
     public MainFragment() {
     }
 
 
-/////////FRAGMENT LIFECYCLE METHODS////////
+    /////////FRAGMENT LIFECYCLE METHODS////////
 //  region
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -64,16 +56,17 @@ public class MainFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         if (savedInstanceState != null) {
-            mWorking = savedInstanceState.getBoolean(STATE_WORKING);
-            mOnBreak = savedInstanceState.getBoolean(STATE_BREAK);
+            mIsWorking = savedInstanceState.getBoolean(STATE_WORKING);
+            mIsOnBreak = savedInstanceState.getBoolean(STATE_BREAK);
             mStartTime = savedInstanceState.getLong(STATE_START_TIME);
             mWholeBreakTime = savedInstanceState.getLong(STATE_BREAK_TIME);
         }
 
-//        Find toolbar from the view and set it to support actionbar
+
+        //        Find toolbar from the view and set it to support actionbar
 //        This can be set into the activity if menu items doesn't change even if fragments does
         setHasOptionsMenu(true);
-        AppCompatActivity appCompatActivity = (AppCompatActivity)getActivity();
+        AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
         mToolBar = (Toolbar) view.findViewById(R.id.toolbar);
         mToolBar.setTitle(TAG);
         appCompatActivity.setSupportActionBar(mToolBar);
@@ -94,6 +87,7 @@ public class MainFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateUI();
+        setDate();
     }
 
     @Override
@@ -112,7 +106,7 @@ public class MainFragment extends Fragment {
     }
 
 
-//    Create material design Toolbar as menu
+    //    Create material design Toolbar as menu
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu, menu);
@@ -120,9 +114,9 @@ public class MainFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        
-        outState.putBoolean(STATE_BREAK, mOnBreak);
-        outState.putBoolean(STATE_WORKING, mWorking);
+
+        outState.putBoolean(STATE_BREAK, mIsOnBreak);
+        outState.putBoolean(STATE_WORKING, mIsWorking);
         outState.putLong(STATE_START_TIME, mStartTime);
         outState.putLong(STATE_END_TIME, mEndTime);
         outState.putLong(STATE_BREAK_TIME, mWholeBreakTime);
@@ -135,80 +129,126 @@ public class MainFragment extends Fragment {
 
     //////VIEW INITIALIZATION///////
 
-//    region
+    //    region
     private void initViews(View view) {
 
         mDateView = (TextView) view.findViewById(R.id.date_text);
         mHoursView = (TextView) view.findViewById(R.id.hours_stats);
         mWeekOrDayView = (TextView) view.findViewById(R.id.day_week_stat_text);
 
-        mBreakButton = (Button) view.findViewById(R.id.break_button);
-        mStartStopWorkButton = (Button) view.findViewById(R.id.start_stop_work_button);
-        mStartStopWorkButton.setOnClickListener(new View.OnClickListener() {
+        mBreakStartStopButton = (Button) view.findViewById(R.id.break_button);
+        mBreakStartStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!mWorking) {
-                    startWorking();
-                    mStartStopWorkButton.setText(getResources().getString(R.string.leave_work));
-                }
-                else {
-                    stopWorking();
-                    mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
+                if (!mIsOnBreak) {
+                    startBreak();
+                } else {
+                    endBreak();
                 }
             }
         });
 
+
+        mStartStopWorkButton = (Button) view.findViewById(R.id.start_stop_work_button);
+        mStartStopWorkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mIsWorking) {
+                    startWorking();
+                } else {
+                    stopWorking();
+                }
+            }
+        });
+
+
+        disableBreakButton();
+
+    }
+
+    private void disableBreakButton() {
+        //        Disable break button because works hasn't been started
+        mBreakStartStopButton.setEnabled(mIsWorking || mIsOnBreak);
+        if (!mBreakStartStopButton.isEnabled()) {
+            mBreakStartStopButton.setBackgroundColor(Color.parseColor("#22442299"));
+            mBreakStartStopButton.setTextColor(Color.parseColor("#22000000"));
+        } else {
+            enableBreakButton();
+        }
+    }
+
+    private void enableBreakButton() {
+        mBreakStartStopButton.setEnabled(true);
+        mBreakStartStopButton.setBackgroundColor(getResources().getColor(R.color.primary));
+        mBreakStartStopButton.setTextColor(getResources().getColor(R.color.ambient_white));
+
     }
 
     private void updateUI() {
-        setTime();
-        if(mWorking) {
+        if (mIsWorking) {
             mStartStopWorkButton.setText(getResources().getString(R.string.leave_work));
-        }
-        else {
+        } else {
             mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
         }
 
+
     }
 
-//    endregion
-    private void setTime() {
+    //    endregion
+    private void setDate() {
 
         Format formatter = new SimpleDateFormat("cccc dd.MM.yyyy");
         Date date = new Date();
         String formattedDate = formatter.format(date);
         mDateView.setText(formattedDate);
     }
-    
-    private void startWorking() {
-        mWorking = true;
-        mOnBreak = false;
-        mStartTime = System.currentTimeMillis();        
-    }
-    
-    private void stopWorking() {
-        if (mWorking) {
-            mWorking = !mWorking;
-            long endTime = System.currentTimeMillis();
 
+    private void startWorking() {
+        mStartStopWorkButton.setText(getResources().getString(R.string.leave_work));
+        if (!mBreakStartStopButton.isEnabled()) {
+            enableBreakButton();
+        }
+        mIsWorking = true;
+        mIsOnBreak = false;
+        mWholeBreakTime = 0l;
+        mBreakStart = 0l;
+        mStartTime = System.currentTimeMillis();
+    }
+
+    private void stopWorking() {
+        if (mIsWorking) {
+            if(mIsOnBreak) {
+                endBreak();
+            }
+            mIsWorking = !mIsWorking;
+            long endTime = System.currentTimeMillis();
             long workTime = endTime - mStartTime - mWholeBreakTime;
 //            workTime = Math.round(workTime);
 //
 //            Format formatter = new SimpleDateFormat("hh:mm:ss");
 //            Date formatDate = new Date();
-//            formatDate.setTime(workTime);
+//            formatDate.setDate(workTime);
 //            String formattedDate = formatter.format(formatDate);
-            mHoursView.setText(formatTime(workTime));
+            mHoursView.setText(formatTime(workTime) + " total break time: " + formatTime(mWholeBreakTime));
+
         }
+        disableBreakButton();
+        mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
     }
+
     private void startBreak() {
+        mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         mBreakStart = System.currentTimeMillis();
+        mIsOnBreak = true;
+        mIsWorking = false;
     }
+
     private void endBreak() {
+        mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
         mWholeBreakTime += System.currentTimeMillis() - mBreakStart;
+        mIsOnBreak = false;
+        mIsWorking = true;
     }
-
-
 
     private long sec;
     private long min;
@@ -225,21 +265,21 @@ public class MainFragment extends Fragment {
 
         sec = sec % 60;
         seconds = String.valueOf(Math.abs(sec));
-        if(sec == 0) seconds = "00";
-        else if(sec < 10 && sec > 0) {
-            seconds = "0"+seconds;
+        if (sec == 0) seconds = "00";
+        else if (sec < 10 && sec > 0) {
+            seconds = "0" + seconds;
         }
 
         min = min % 60;
         minutes = String.valueOf(Math.abs(min));
-        if(min == 0) minutes = "00";
-        else if(min < 10) {
+        if (min == 0) minutes = "00";
+        else if (min < 10) {
             minutes = "0" + minutes;
         }
 
         hours = String.valueOf(Math.abs(hrs));
-        if(hrs == 0) hours = "00";
-        else if(hrs < 10) {
+        if (hrs == 0) hours = "00";
+        else if (hrs < 10) {
             hours = "0" + hours;
         }
 
