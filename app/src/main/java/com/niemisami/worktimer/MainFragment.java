@@ -3,11 +3,10 @@ package com.niemisami.worktimer;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
+
+
 import android.graphics.Color;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,8 +23,7 @@ import android.widget.TextView;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 /**
@@ -255,6 +253,11 @@ public class MainFragment extends Fragment {
         } else {
             mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
         }
+        if(!mIsOnBreak) {
+            mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
+        } else {
+            mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
+        }
 
 
     }
@@ -301,12 +304,11 @@ public class MainFragment extends Fragment {
         mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
     }
 
-
     private void startBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         mBreakStart = System.currentTimeMillis();
         mIsOnBreak = true;
-//        mIsWorking = false;
+
     }
 
     private void endBreak() {
