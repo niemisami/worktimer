@@ -1,8 +1,13 @@
 package com.niemisami.worktimer;
 
 
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +24,8 @@ import android.widget.TextView;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -35,6 +42,14 @@ public class MainFragment extends Fragment {
     final private static String STATE_BREAK_TIME = "STATE_BREAK_TIME";
     final private static String STATE_END_TIME = "STATE_END_TIME";
 
+    private SharedPreferences mSharedPreferences;
+    final private static String PREFERENCE_FILE_KEY = "com.niemisami.worktimer.private_pref_key";
+    final private static String PREF_WORKING = "PREF_WORKING";
+    final private static String PREF_BREAK = "PREF_BREAK";
+    final private static String PREF_START_TIME = "PREF_START_TIME";
+    final private static String PREF_BREAK_TIME = "PREF_BREAK_TIME";
+    final private static String PREF_END_TIME = "PREF_END_TIME";
+
     private Toolbar mToolBar;
 
     private Button mStartStopWorkButton, mBreakStartStopButton;
@@ -44,12 +59,31 @@ public class MainFragment extends Fragment {
     private boolean mIsWorking, mIsOnBreak;
 
 
+    //    Timer values
+    private long sec;
+    private long min;
+    private long hrs;
+    private String seconds, minutes, hours;
+
     public MainFragment() {
     }
 
 
     /////////FRAGMENT LIFECYCLE METHODS////////
 //  region
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mSharedPreferences = getActivity().getSharedPreferences(PREFERENCE_FILE_KEY,
+                Activity.MODE_PRIVATE);
+
+        setRetainInstance(true);
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -59,6 +93,7 @@ public class MainFragment extends Fragment {
             mIsWorking = savedInstanceState.getBoolean(STATE_WORKING);
             mIsOnBreak = savedInstanceState.getBoolean(STATE_BREAK);
             mStartTime = savedInstanceState.getLong(STATE_START_TIME);
+            mEndTime = savedInstanceState.getLong(STATE_END_TIME);
             mWholeBreakTime = savedInstanceState.getLong(STATE_BREAK_TIME);
         }
 
@@ -79,11 +114,6 @@ public class MainFragment extends Fragment {
 
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         updateUI();
@@ -92,11 +122,14 @@ public class MainFragment extends Fragment {
 
     @Override
     public void onPause() {
+        Log.d(TAG, "onPause");
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy");
+        savePreferences();
         super.onDestroy();
     }
 
@@ -123,6 +156,38 @@ public class MainFragment extends Fragment {
 
 
         super.onSaveInstanceState(outState);
+    }
+
+    /**
+     * Store the important values: start time,
+     */
+    private void savePreferences() {
+
+        if (mIsWorking) {
+            Log.d(TAG, "preferences saved");
+            mSharedPreferences.edit()
+                    .putBoolean(PREF_WORKING, mIsWorking)
+                    .putBoolean(PREF_BREAK, mIsOnBreak)
+                    .putLong(PREF_START_TIME, mStartTime)
+                    .putLong(PREF_BREAK_TIME, mWholeBreakTime)
+                    .putLong(PREF_END_TIME, mEndTime)
+                    .apply();
+        }
+    }
+
+    private void loadPreferences() {
+
+        if (mSharedPreferences.getBoolean(PREF_WORKING, false)) {
+            Log.d(TAG, "Values loaded");
+            mIsWorking = mSharedPreferences.getBoolean(PREF_WORKING, false);
+            mIsOnBreak = mSharedPreferences.getBoolean(PREF_BREAK, false);
+            mStartTime = mSharedPreferences.getLong(PREF_START_TIME, 0l);
+            mWholeBreakTime = mSharedPreferences.getLong(PREF_BREAK_TIME, 0l);
+            mEndTime = mSharedPreferences.getLong(PREF_END_TIME, 0l);
+        } else {
+            Log.d(TAG, "Run for the first time");
+        }
+
     }
 //    endregion
 
@@ -217,7 +282,7 @@ public class MainFragment extends Fragment {
 
     private void stopWorking() {
         if (mIsWorking) {
-            if(mIsOnBreak) {
+            if (mIsOnBreak) {
                 endBreak();
             }
             mIsWorking = !mIsWorking;
@@ -236,24 +301,21 @@ public class MainFragment extends Fragment {
         mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
     }
 
+
     private void startBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         mBreakStart = System.currentTimeMillis();
         mIsOnBreak = true;
-        mIsWorking = false;
+//        mIsWorking = false;
     }
 
     private void endBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
         mWholeBreakTime += System.currentTimeMillis() - mBreakStart;
         mIsOnBreak = false;
-        mIsWorking = true;
+//        mIsWorking = true;
     }
 
-    private long sec;
-    private long min;
-    private long hrs;
-    private String seconds, minutes, hours;
 
     private String formatTime(long millis) {
 
