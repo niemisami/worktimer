@@ -78,6 +78,8 @@ public class MainFragment extends Fragment {
         mSharedPreferences = getActivity().getSharedPreferences(PREFERENCE_FILE_KEY,
                 Activity.MODE_PRIVATE);
 
+        loadPreferences();
+
         setRetainInstance(true);
     }
 
@@ -157,7 +159,7 @@ public class MainFragment extends Fragment {
     }
 
     /**
-     * Store the important values: start time,
+     * Store important values to SharedPreferences. Either save or clear values
      */
     private void savePreferences() {
 
@@ -170,6 +172,15 @@ public class MainFragment extends Fragment {
                     .putLong(PREF_BREAK_TIME, mWholeBreakTime)
                     .putLong(PREF_END_TIME, mEndTime)
                     .apply();
+        } else {
+            mSharedPreferences.edit()
+                    .putBoolean(PREF_WORKING, false)
+                    .putBoolean(PREF_BREAK, false)
+                    .putLong(PREF_START_TIME, 0l)
+                    .putLong(PREF_BREAK_TIME, 0l)
+                    .putLong(PREF_END_TIME, 0l)
+                    .apply();
+
         }
     }
 
@@ -253,11 +264,12 @@ public class MainFragment extends Fragment {
         } else {
             mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
         }
-        if(!mIsOnBreak) {
+        if(mIsOnBreak) {
             mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         } else {
             mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
         }
+
 
 
     }
@@ -304,6 +316,9 @@ public class MainFragment extends Fragment {
         mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
     }
 
+    private void resetWorkValues() {
+
+    }
     private void startBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         mBreakStart = System.currentTimeMillis();
@@ -315,6 +330,7 @@ public class MainFragment extends Fragment {
         mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
         mWholeBreakTime += System.currentTimeMillis() - mBreakStart;
         mIsOnBreak = false;
+
 //        mIsWorking = true;
     }
 
