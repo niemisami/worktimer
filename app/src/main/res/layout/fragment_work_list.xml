@@ -16,11 +16,9 @@
         android:gravity="center_vertical">
 
         <ImageButton
-            android:id="@+id/fab"
+            android:id="@+id/fab1"
             android:layout_width="@dimen/fab_size"
             android:layout_height="@dimen/fab_size"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
             android:layout_gravity="bottom|right"
             android:background="@drawable/ripple"
             android:elevation="4dp"
@@ -28,7 +26,32 @@
             android:stateListAnimator="@anim/anim" />
 
         <TextView
-            android:id="@+id/place_name"
+            android:id="@+id/animation_text_view1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fade"
+            android:textColor="@color/ambient_white"
+            android:textSize="@dimen/text_large"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/fab2"
+            android:layout_width="@dimen/fab_size"
+            android:layout_height="@dimen/fab_size"
+            android:layout_gravity="bottom|right"
+            android:background="@drawable/ripple"
+            android:elevation="4dp"
+            android:layout_margin="@dimen/margin_medium"
+            android:stateListAnimator="@anim/anim" />
+
+        <TextView
+            android:id="@+id/animation_text_view2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Fade"

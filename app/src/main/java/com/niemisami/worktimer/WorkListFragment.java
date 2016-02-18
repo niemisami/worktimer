@@ -7,11 +7,8 @@ import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
-import java.util.concurrent.TimeoutException;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -19,8 +16,8 @@ import java.util.concurrent.TimeoutException;
 public class WorkListFragment extends Fragment {
 
     private ViewGroup mRootView;
-    private ImageButton mPlaceButton;
-    private TextView mPlaceName;
+    private ImageButton mButton1, mButton2;
+    private TextView mAnimationTitle1, mAnimationTitle2;
 
     public WorkListFragment() {
     }
@@ -39,14 +36,24 @@ public class WorkListFragment extends Fragment {
         mRootView = (ViewGroup) view.findViewById(R.id.fragmentWorkList);
 //        mRootView.setOnClickListener(this);
 
-        mPlaceName = (TextView) view.findViewById(R.id.place_name);
+        mAnimationTitle1 = (TextView) view.findViewById(R.id.animation_text_view1);
+        mAnimationTitle2 = (TextView) view.findViewById(R.id.animation_text_view1);
 
-        mPlaceButton = (ImageButton) view.findViewById(R.id.fab);
-        mPlaceButton.setOnClickListener(new View.OnClickListener() {
+        mButton1 = (ImageButton) view.findViewById(R.id.fab1);
+        mButton1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 TransitionManager.beginDelayedTransition(mRootView, new Fade());
-                toggleVisibility(mPlaceName);
+                toggleVisibility(mAnimationTitle1);
+
+            }
+        });
+        mButton2 = (ImageButton) view.findViewById(R.id.fab2);
+        mButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TransitionManager.beginDelayedTransition(mRootView, new Fade());
+                toggleVisibility(mAnimationTitle1);
 
             }
         });
