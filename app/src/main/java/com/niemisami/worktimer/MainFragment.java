@@ -3,8 +3,6 @@ package com.niemisami.worktimer;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-
-
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -23,7 +21,6 @@ import android.widget.TextView;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 
 
 /**
@@ -56,6 +53,8 @@ public class MainFragment extends Fragment {
     private long mStartTime, mEndTime, mBreakStart, mWholeBreakTime;
     private boolean mIsWorking, mIsOnBreak;
 
+    private WorkHandler mWorkHandler;
+
 
     //    Timer values
     private long sec;
@@ -78,6 +77,7 @@ public class MainFragment extends Fragment {
         mSharedPreferences = getActivity().getSharedPreferences(PREFERENCE_FILE_KEY,
                 Activity.MODE_PRIVATE);
 
+        mWorkHandler = WorkHandler.getInstance(getActivity().getApplicationContext());
         loadPreferences();
 
         setRetainInstance(true);
@@ -130,6 +130,7 @@ public class MainFragment extends Fragment {
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         savePreferences();
+        mWorkHandler.endProcess();
         super.onDestroy();
     }
 
@@ -149,7 +150,7 @@ public class MainFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
 
         outState.putBoolean(STATE_BREAK, mIsOnBreak);
-        outState.putBoolean(STATE_WORKING, mIsWorking);
+        outState.putBoolean(STATE_WORKING, mWorkHandler.isWorking());
         outState.putLong(STATE_START_TIME, mStartTime);
         outState.putLong(STATE_END_TIME, mEndTime);
         outState.putLong(STATE_BREAK_TIME, mWholeBreakTime);
@@ -163,10 +164,10 @@ public class MainFragment extends Fragment {
      */
     private void savePreferences() {
 
-        if (mIsWorking) {
+        if (mWorkHandler.isWorking()) {
             Log.d(TAG, "preferences saved");
             mSharedPreferences.edit()
-                    .putBoolean(PREF_WORKING, mIsWorking)
+                    .putBoolean(PREF_WORKING, mWorkHandler.isWorking())
                     .putBoolean(PREF_BREAK, mIsOnBreak)
                     .putLong(PREF_START_TIME, mStartTime)
                     .putLong(PREF_BREAK_TIME, mWholeBreakTime)
@@ -196,7 +197,6 @@ public class MainFragment extends Fragment {
         } else {
             Log.d(TAG, "Run for the first time");
         }
-
     }
 //    endregion
 
@@ -214,7 +214,7 @@ public class MainFragment extends Fragment {
         mBreakStartStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mIsOnBreak) {
+                if (!mWorkHandler.isOnBreak()) {
                     startBreak();
                 } else {
                     endBreak();
@@ -227,7 +227,7 @@ public class MainFragment extends Fragment {
         mStartStopWorkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mIsWorking) {
+                if (!mWorkHandler.isWorking()) {
                     startWorking();
                 } else {
                     stopWorking();
@@ -242,7 +242,7 @@ public class MainFragment extends Fragment {
 
     private void disableBreakButton() {
         //        Disable break button because works hasn't been started
-        mBreakStartStopButton.setEnabled(mIsWorking || mIsOnBreak);
+        mBreakStartStopButton.setEnabled(mWorkHandler.isWorking() || mIsOnBreak);
         if (!mBreakStartStopButton.isEnabled()) {
             mBreakStartStopButton.setBackgroundColor(Color.parseColor("#22442299"));
             mBreakStartStopButton.setTextColor(Color.parseColor("#22000000"));
@@ -259,17 +259,16 @@ public class MainFragment extends Fragment {
     }
 
     private void updateUI() {
-        if (mIsWorking) {
+        if (mWorkHandler.isWorking()) {
             mStartStopWorkButton.setText(getResources().getString(R.string.leave_work));
         } else {
             mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
         }
-        if(mIsOnBreak) {
+        if (mWorkHandler.isOnBreak()) {
             mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
         } else {
             mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
         }
-
 
 
     }
@@ -288,30 +287,16 @@ public class MainFragment extends Fragment {
         if (!mBreakStartStopButton.isEnabled()) {
             enableBreakButton();
         }
-        mIsWorking = true;
-        mIsOnBreak = false;
         mWholeBreakTime = 0l;
         mBreakStart = 0l;
-        mStartTime = System.currentTimeMillis();
+        mEndTime = 0l;
+        mStartTime = mWorkHandler.startWorking();
     }
 
     private void stopWorking() {
-        if (mIsWorking) {
-            if (mIsOnBreak) {
-                endBreak();
-            }
-            mIsWorking = !mIsWorking;
-            long endTime = System.currentTimeMillis();
-            long workTime = endTime - mStartTime - mWholeBreakTime;
-//            workTime = Math.round(workTime);
-//
-//            Format formatter = new SimpleDateFormat("hh:mm:ss");
-//            Date formatDate = new Date();
-//            formatDate.setDate(workTime);
-//            String formattedDate = formatter.format(formatDate);
-            mHoursView.setText(formatTime(workTime) + " total break time: " + formatTime(mWholeBreakTime));
+        long workTime = mWorkHandler.stopWorking();
+        mHoursView.setText(formatTime(workTime));
 
-        }
         disableBreakButton();
         mStartStopWorkButton.setText(getResources().getString(R.string.come_to_work));
     }
@@ -319,17 +304,16 @@ public class MainFragment extends Fragment {
     private void resetWorkValues() {
 
     }
+
     private void startBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.end_break));
-        mBreakStart = System.currentTimeMillis();
-        mIsOnBreak = true;
+        mBreakStart = mWorkHandler.startBreak();
 
     }
 
     private void endBreak() {
         mBreakStartStopButton.setText(getResources().getString(R.string.start_break));
-        mWholeBreakTime += System.currentTimeMillis() - mBreakStart;
-        mIsOnBreak = false;
+        mWholeBreakTime = mWorkHandler.endBreak();
 
 //        mIsWorking = true;
     }

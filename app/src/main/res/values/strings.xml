@@ -11,8 +11,6 @@
     <string name="getting_started">Let\'s Get Started</string>
 
 
-
-
     <string name="today_intro">Hello! Today is </string>
     <string name="come_to_work">Start working</string>
     <string name="start_break">Take a Break</string>
@@ -21,6 +19,8 @@
     <string name="weekend">Weekend</string>
     <string name="day_stats">Today you have worked:</string>
     <string name="week_stats">This week you have worked:</string>
+    <string name="title_activity_work_list">WorkListActivity</string>
+    <string name="action_settings">Settings</string>
 
 
 </resources>

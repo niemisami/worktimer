@@ -1,7 +1,6 @@
 <resources>
 
 
-
     <style name="Theme.MyTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- customize the color palette -->
         <item name="colorPrimary">@color/primary</item>
@@ -18,7 +17,7 @@
         <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
         <item name="colorControlHighlight">@color/primary_light</item>
     </style>
-    
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MyTheme"></style>
 
@@ -33,7 +32,6 @@
         <item name="android:layout_height">1px</item>
         <item name="android:background">#333</item>
     </style>
-
 
 
 </resources>
